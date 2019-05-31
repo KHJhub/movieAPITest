@@ -36,16 +36,43 @@ $(function(){
 				var dailyBoxOfficeList = boxOfficeResult.dailyBoxOfficeList; 
 	
 			 	var len = dailyBoxOfficeList.length;        //배열 길이
-				for(var i = 0; i < len; i++){
+			 	
+			 	// for 1  영화 제목, 영화 코드
+				//for(var i = 0; i < len; i++){
 					
-					var rank = dailyBoxOfficeList[i].rank;
-					var movieNm = dailyBoxOfficeList[i].movieNm;
-					var movieCd = dailyBoxOfficeList[i].movieCd;
+					//var rank = dailyBoxOfficeList[i].rank;
+					//var movieNm = dailyBoxOfficeList[i].movieNm;
+					//var movieCd = dailyBoxOfficeList[i].movieCd;
 					
-					$("#rank").append(rank + "   ");
-					$("#movieNm").append(movieNm + "   ");
-					$("#movieCd").append(movieCd + "   ");
-				}
+					//$("#rank").append(rank + "   ");
+					//$("#movieNm").append(movieNm + "   ");
+					//$("#movieCd").append(movieCd + "   ");
+					
+				//}
+			 	
+			 	var movieNm = dailyBoxOfficeList[0].movieNm; //1위 영화명
+			 	
+			 	var header = {
+			 			"X-Naver-Client-Id" : "Fc4lGVGl3zDMtizzcZbx",
+						"X-Naver-Client-Secret" : "q3OgVCUh0y"
+			 	}
+			 	// ajax 2
+				$.ajax({
+					url : 'https://openapi.naver.com/v1/search/image',
+						method:'get',
+						 beforeSend: function(request) {
+							    request.setRequestHeader("X-Naver-Client-Id", "Fc4lGVGl3zDMtizzcZbx");
+							    request.setRequestHeader("X-Naver-Client-Secret", "q3OgVCUh0y");
+							  },
+						data: "query="+movieNm+"&display=1&sort=sim",
+						success:function(data){
+							// for 2 영화 제목 배열 길이만큼 반복, 이미지 배열 얻기
+							var poster = data.items.titles;
+							alert(poster);
+							
+							// for 3 이미지 배열만큼 반복, 태그에 뿌리기
+						}
+				});
 				
 			},
             error : function(jqXHR, testStatus){
@@ -74,6 +101,8 @@ $(function(){
 <button id="btn">
 api 호출
 </button>
+
+<img id="poster" alt="" src="">
 
 </body>
 </html>
