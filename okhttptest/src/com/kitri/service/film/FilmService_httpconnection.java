@@ -9,6 +9,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import com.kitri.dto.FilmDto;
 
@@ -82,14 +84,14 @@ public class FilmService_httpconnection {
 					filmDto.setMovieNm(movieNm);
 					
 					
-		// 1-2. 네이버 이미지 검색 API
+		// 1-2. 네이버 영화 목록 검색 API
 					
 					// ① url + 파라미터 값 설정
-					String url2 = "https://openapi.naver.com/v1/search/image";								// API 호출 URL
-					String search = URLEncoder.encode("영화 " + movieNm + " 포스터", "UTF-8");	// 파라미터값 (UTF-8인코딩 필수)
-					String paramNaver = "query=" + search + "&display=1&sort=sim";
+					String url2 = "https://openapi.naver.com/v1/search/movie.json";			// API 호출 URL
+					String search = URLEncoder.encode(movieNm, "UTF-8");				     	// 파라미터값 (UTF-8인코딩 필수)
+					String paramNaver = "query=" + search + "&display=1";
 
-					String httpUrl2 = url2 + "?" + paramNaver;													// 최종 URL
+					String httpUrl2 = url2 + "?" + paramNaver;									   // 최종 URL
 					
 					// ② 헤더값 생성
 					HashMap<String, String> header = new HashMap<>();
@@ -111,13 +113,17 @@ public class FilmService_httpconnection {
 						
 						JSONObject imageArrayItems = (JSONObject) imageArray.get(j);
 						
-						String movieImageUrl = (String) imageArrayItems.get("link");   // movieImageUrl = 검색 이미지 주소
+						// movieImageUrl = 검색결과의 이미지 주소
+						String movieImageUrl = (String) imageArrayItems.get("link");   
 						
-						// '영화 포스터 이미지 주소'를 DTO에 세팅함
-						filmDto.setMovieImage(movieImageUrl);
+						// HighImageUrl = 고화질 포스터 이미지 주소
+				        String HighImageUrl = getPoster(movieImageUrl);
+
+						// '포스터 이미지 주소'를 DTO에 세팅함
+						filmDto.setMovieImage(HighImageUrl);
 					}
 					
-    // #2 API를 통해 얻은 값(영화명, 영화코드, 포스터URL)을 box에 세팅
+    // #2 API를 통해 얻은 값(영화명, 영화코드, 포스터 이미지 주소)을 box에 세팅
 					box.add(filmDto);
 					
 				} // for문 end
@@ -126,15 +132,17 @@ public class FilmService_httpconnection {
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) { // naver 검색어 encoding 예외
 			e.printStackTrace();
-
-		}  // try catch end
+		}   // try catch end
 
 		
 	// #3 box 리턴
 	return box;
 	
-} // getBoxOffice end
+} // getBoxOffice() end
 
+	
+	
+	
 	
 	// 2 <HTTP GET 호출> 메소드
 
@@ -194,6 +202,31 @@ public class FilmService_httpconnection {
 				}
 	     
 			return response;
+		} // APIHttpGet() end
+
+	
+	
+	// 3 <고화질 포스터 이미지 주소 얻기> 메소드
+	// *인자값
+	// - String movieImageUrl : 네이버 영화 목록 검색 api에서 얻은 link값
+	public String getPoster(String movieImageUrl) {
+		
+		String HighImageUrl = "";
+		
+		int beginIndex = movieImageUrl.lastIndexOf("=")+1;
+		String movieCdNaver = movieImageUrl.substring(beginIndex); // movieCdNaver = 영화코드(네이버)
+		
+		// 네이버 영화의 고화질 포스터 주소를 크롤링
+		String connUrl = "https://movie.naver.com/movie/bi/mi/photoViewPopup.nhn?movieCode="+movieCdNaver;
+		
+		try {
+			Document doc = Jsoup.connect(connUrl).get();
+			HighImageUrl = doc.getElementById("targetImage").attr("src").toString(); // HighImageUrl = 고화질 포스터 이미지 주소
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
+        return HighImageUrl;
+	} // getPoster() end
+	
 }
