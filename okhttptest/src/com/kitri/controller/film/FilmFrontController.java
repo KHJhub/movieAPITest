@@ -21,16 +21,15 @@ public class FilmFrontController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		
-		String act = request.getParameter("act"); // *파라미터 변수
-		String path = "/index.jsp"; 			  // *기본 경로
+		String act = request.getParameter("act"); 	// *파라미터 변수
+		String path = "/index.jsp"; 			  			// *기본 경로
 
 		// *act에 따른 경로 이동
 		// 1
 		// Home 눌릴때 || localhost/MovieHolic/film 링크 검색 시(첫 화면)
 		if ("showBox".equals(act)||act==null) {
 			// 메인 페이지 띄우기
-			// 경로 get 				 		  (C -> FC)
+			// 경로 get 				 		  		   	(C -> FC)
 			// request(setted 박스오피스) get    (C -> FC)
 			path = FilmController.getUserController().getBoxOffice(request, response);
 			
@@ -38,7 +37,7 @@ public class FilmFrontController extends HttpServlet {
 			MoveUrl.forward(request, response, path);
 		}
 		// 2
-		// <>
+		// 
 		else if ("".equals(act)) {
 			
 		}

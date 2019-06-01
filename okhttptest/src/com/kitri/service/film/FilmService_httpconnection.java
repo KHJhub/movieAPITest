@@ -1,8 +1,7 @@
 package com.kitri.service.film;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
@@ -40,20 +39,20 @@ public class FilmService_httpconnection {
 		
 		List<FilmDto> box = new ArrayList<>();
 
-		// 1 API 호출 (HttpUrlConnection)
+		// #1 API 호출 (HttpUrlConnection)
 
 		// 1-1. 영진원 일별 박스오피스 API
 		// ① url + 파라미터 값 설정
 		String url = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json";
-		String urlParameters1 = "key=d497cad784b01e0c354d04518c4ddfc7";
-		String urlParameters2 = "targetDt=20190531";
+		String paramYoung1 = "key=d497cad784b01e0c354d04518c4ddfc7";
+		String paramYoung2 = "targetDt=20190531";
 
-		String httpUrl = url + "?" + urlParameters1 + "&" + urlParameters2;
+		String httpUrl = url + "?" + paramYoung1 + "&" + paramYoung2;
 
 		// ② API 호출 (GET)
-		String response = APIHttpGet(httpUrl, null);
+		String responseBoxOffice = APIHttpGet(httpUrl, null);
 
-		// ③ response (JSON) 파싱
+		// ③ responseBoxOffice (JSON) 파싱
 		// *박스오피스 JSON 구조 : { {boxOfficeResult} - [dailyBoxOfficeList] 여러 개 - {key1 : "", key2 : "" , ...} }
 		try {
 			
@@ -61,7 +60,7 @@ public class FilmService_httpconnection {
 				JSONParser jsonParser = new JSONParser();
 				
 				// String 타입의 JSON값으로, 가장 큰 JSON 객체 생성
-				JSONObject jsonObject = (JSONObject) jsonParser.parse(response.toString());
+				JSONObject jsonObject = (JSONObject) jsonParser.parse(responseBoxOffice.toString());
 		
 				// dailyBoxOfficeList JSON배열 추출
 				JSONObject boxOfficeResult = (JSONObject) jsonObject.get("boxOfficeResult");
@@ -71,32 +70,70 @@ public class FilmService_httpconnection {
 				int len = dailyBoxOfficeList.size();
 				for (int i = 0; i < len; i++) {
 					
+					FilmDto filmDto = new FilmDto();
+					
 					JSONObject dailyListItems = (JSONObject) dailyBoxOfficeList.get(i);
 					
-					String MovieCdYoung = dailyListItems.get("movieCd").toString(); 		// 영화코드(영진원)
-					String MovieNm = dailyListItems.get("movieNm").toString(); 			// 영화명
+					String movieCdYoung = dailyListItems.get("movieCd").toString(); 		// 영화코드(영진원)
+					String movieNm = dailyListItems.get("movieNm").toString(); 			// 영화명
+					
+					// '영화코드(영진원)', '영화명'을 DTO에 세팅함
+					filmDto.setMovieCdYoung(movieCdYoung);
+					filmDto.setMovieNm(movieNm);
+					
 					
 		// 1-2. 네이버 이미지 검색 API
 					
-					// 헤더값 생성
+					// ① url + 파라미터 값 설정
+					String url2 = "https://openapi.naver.com/v1/search/image";								// API 호출 URL
+					String search = URLEncoder.encode("영화 " + movieNm + " 포스터", "UTF-8");	// 파라미터값 (UTF-8인코딩 필수)
+					String paramNaver = "query=" + search + "&display=1&sort=sim";
+
+					String httpUrl2 = url2 + "?" + paramNaver;													// 최종 URL
+					
+					// ② 헤더값 생성
 					HashMap<String, String> header = new HashMap<>();
-					//header.put("");
+					header.put("X-Naver-Client-Id", "Fc4lGVGl3zDMtizzcZbx");
+					header.put("X-Naver-Client-Secret", "q3OgVCUh0y");
+					
+					// ③ API 호출 (GET)
+					String responseNaver = APIHttpGet(httpUrl2, header);
+					
+					// ④ responseNaver (JSON) 파싱
+					JSONParser jsonParser2 = new JSONParser();
+					
+					JSONObject jsonObject2 = (JSONObject) jsonParser.parse(responseNaver);
+			
+					JSONArray imageArray = (JSONArray) jsonObject2.get("items");
+					
+					int len2 = imageArray.size();
+					for (int j = 0; j < len2; j++) {
+						
+						JSONObject imageArrayItems = (JSONObject) imageArray.get(j);
+						
+						String movieImageUrl = (String) imageArrayItems.get("link");   // movieImageUrl = 검색 이미지 주소
+						
+						// '영화 포스터 이미지 주소'를 DTO에 세팅함
+						filmDto.setMovieImage(movieImageUrl);
+					}
+					
+    // #2 API를 통해 얻은 값(영화명, 영화코드, 포스터URL)을 box에 세팅
+					box.add(filmDto);
 					
 				} // for문 end
 		
-		} catch (ParseException e) {
+		} catch (ParseException e) {  						// json 파싱 예외
 			e.printStackTrace();
-		}
+		} catch (UnsupportedEncodingException e) { // naver 검색어 encoding 예외
+			e.printStackTrace();
 
+		}  // try catch end
 
-
-	// 2 API를 통해 얻은 값(영화명, 영화코드, 포스터URL)을 box에 세팅
-
-	// 3 box 리턴
-
-	return null;
+		
+	// #3 box 리턴
+	return box;
 	
-} // 메소드 end
+} // getBoxOffice end
 
 	
 	// 2 <HTTP GET 호출> 메소드
@@ -107,7 +144,7 @@ public class FilmService_httpconnection {
 	// * return
 	// JSON형식의 응답결과 (String 타입)
 
-	public String APIHttpGet(String httpUrl, HashMap header) {
+	public String APIHttpGet(String httpUrl, HashMap<String, String> header) {
 
 			String response = "";    // 응답 결과 담을 String
 			
@@ -127,7 +164,7 @@ public class FilmService_httpconnection {
 	        		while(keys.hasNext()) {
 	        			String key = keys.next();
 	        			String value = (String) header.get(key);
-	        			con.setRequestProperty(key, value); 		// Request Header 정의
+	        			con.setRequestProperty(key, value); 		// Request Header 설정
 	        		}
 	        	}
 	        	
@@ -147,6 +184,8 @@ public class FilmService_httpconnection {
 					in.close();
 					
 					response = sr.toString();
+					
+					System.out.println("정상 호출 됨 결과 : " + sr);
 					
 	        	}
 	        	
