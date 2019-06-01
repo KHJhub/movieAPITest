@@ -6,10 +6,8 @@
 <meta charset="UTF-8">
 <title>박스 오피스 api - java에서 도전</title>
 
+<!-- jQuery -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
-<script>
-
-</script>
 
 </head>
 
@@ -20,6 +18,10 @@
 
 영화명<br>
 <div id="movieNm">
+<%
+request.getAttribute("box");
+System.out.println(request.getAttribute("box"));
+%>
 </div>
 
 
