@@ -29,20 +29,26 @@ public class FilmController {
 	
 	
 	// 1
-	// 
+	// 박스오피스 get
 	public String getBoxOffice(HttpServletRequest request, HttpServletResponse response) {
 		
 		String path = "/boxservlet.jsp";
 		
 		// 박스오피스 목록 get  (S -> C)
 		//List<FilmDto> list = FilmService.getFilmService().getBoxOffice();
-		List<FilmDto> list = FilmService_httpconnection.getFilmService().getBoxOffice();
+		List<FilmDto> list1 = FilmService_httpconnection.getFilmService().getBoxOffice();
 		
-		// 박스오피스 set 		(C -> FC)
-		request.setAttribute("box", list);
+		// Attribute set 			(C -> FC)
+		request.setAttribute("box", list1);
 		
 		// 경로 return 				(C -> FC)
 		return path;
+	}
+	
+	// 2
+	// 선호 장르 영화 목록 get
+	public void getFavoriteFilm(HttpServletRequest request, HttpServletResponse response) {
+		
 	}
 
 }

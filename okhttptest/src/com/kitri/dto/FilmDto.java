@@ -1,7 +1,5 @@
 package com.kitri.dto;
 
-import java.util.List;
-
 public class FilmDto {
 
 	private String movieNm; 		// 영화명
